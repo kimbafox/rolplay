@@ -554,7 +554,7 @@
 			<div class="shop-inner">
 				<div class="owner-card">
 					<strong>Owner</strong>
-					<p class="owner-note">Control total del turno, tienda y tablas privadas.</p>
+					<p class="owner-note" id="owner-room-note">Control total del turno, tienda y tablas privadas.</p>
 				</div>
 
 				<div class="turn-card">
@@ -597,6 +597,7 @@
 					<h2 id="tables-title">Editar tablas</h2>
 					<div class="board-tools">
 						<button class="add-button" id="add-table" type="button">Agregar tabla</button>
+						<button class="add-button" id="save-room" type="button">Guardar partida</button>
 					</div>
 				</div>
 				<div id="tables-editor">
@@ -612,11 +613,14 @@
 		const mapStage = document.getElementById('map-stage');
 		const markerLayer = document.getElementById('marker-layer');
 		const rosterNode = document.getElementById('player-roster');
+		const ownerRoomNote = document.getElementById('owner-room-note');
 		const turnNote = document.getElementById('turn-note');
 		const tablesTitle = document.getElementById('tables-title');
 		const tablesEditor = document.getElementById('tables-editor');
 		const addTableButton = document.getElementById('add-table');
+		const saveRoomButton = document.getElementById('save-room');
 		const shopInputs = Array.from(document.querySelectorAll('[data-shop-input]'));
+        const currentRoomId = window.RolGameState.getCurrentRoomId();
 
 		let currentTool = null;
 		let selectedPlayerId = null;
@@ -822,6 +826,7 @@
 		}
 
 		function renderState(state) {
+			ownerRoomNote.textContent = currentRoomId ? 'Sala activa: ' + currentRoomId : 'Sin sala activa.';
 			renderMarkers(state.markers);
 			renderRoster(state);
 			syncShopInputs(state);
@@ -840,6 +845,20 @@
 				content: 'Escribe aqui los datos de esta tabla.'
 			});
 			window.RolGameState.updatePlayerTables(selectedPlayerId, tables);
+		});
+
+		saveRoomButton.addEventListener('click', async () => {
+			if (!currentRoomId) {
+				return;
+			}
+
+			const saveName = window.prompt('Nombre del guardado', 'Guardado ' + new Date().toLocaleString());
+			if (!saveName) {
+				return;
+			}
+
+			await window.RolGameState.saveRoomSnapshot(saveName);
+			window.alert('Partida guardada.');
 		});
 
 		tablesEditor.addEventListener('change', (event) => {
@@ -861,7 +880,15 @@
 			}
 		});
 
+		if (currentRoomId) {
+			window.RolGameState.setOwnerPresence(true);
+			window.addEventListener('beforeunload', () => {
+				window.RolGameState.setOwnerPresence(false);
+			});
+		}
+
 		window.RolGameState.subscribe(renderState);
+		window.RolGameState.refreshFromServer();
 		renderState(window.RolGameState.loadState());
 	</script>
 </body>

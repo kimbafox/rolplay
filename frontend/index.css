@@ -311,6 +311,15 @@ body {
 		);
 }
 
+.terminal-empty {
+	padding: 10px 8px;
+	border: 2px solid var(--terminal-line);
+	background: rgba(34, 15, 15, 0.72);
+	font-size: 1.15rem;
+	line-height: 1.2;
+	color: var(--muted);
+}
+
 .terminal-line {
 	display: grid;
 	grid-template-columns: auto 1fr auto auto;

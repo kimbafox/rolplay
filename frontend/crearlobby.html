@@ -42,6 +42,13 @@
 					<input id="lobby-note" name="lobby-note" type="text" value="Lobby editable listo para la partida">
 				</div>
 
+				<div class="field">
+					<label for="load-save">Cargar avance guardado</label>
+					<select id="load-save" name="load-save">
+						<option value="">Partida nueva</option>
+					</select>
+				</div>
+
 				<div class="create-actions">
 					<button class="button" type="submit">Crear Sala</button>
 				</div>
@@ -308,10 +315,12 @@
 		</section>
 	</main>
 
+	<script src="./game-state.js"></script>
 	<script>
 		const passwordToggle = document.getElementById('use-password');
 		const passwordInput = document.getElementById('room-password');
 		const lobbyForm = document.getElementById('lobby-form');
+		const loadSaveSelect = document.getElementById('load-save');
 
 		passwordToggle.addEventListener('change', () => {
 			passwordInput.classList.toggle('hidden', !passwordToggle.checked);
@@ -348,10 +357,49 @@
 			}
 		});
 
-		lobbyForm.addEventListener('submit', (event) => {
+		function collectShopItems() {
+			const rows = Array.from(document.querySelectorAll('.category-row'));
+			return rows.map((row, index) => {
+				const inputs = row.querySelectorAll('input');
+				return {
+					id: 'shop-' + String(index + 1),
+					title: inputs[0] ? inputs[0].value.trim() || 'Articulo' : 'Articulo',
+					price: inputs[1] ? inputs[1].value.trim() || '0' : '0'
+				};
+			});
+		}
+
+		async function loadSaves() {
+			try {
+				const saves = await window.RolGameState.listSaves();
+				saves.forEach((save) => {
+					const option = document.createElement('option');
+					option.value = save.id;
+					option.textContent = save.name + ' (' + save.roomName + ')';
+					loadSaveSelect.appendChild(option);
+				});
+			} catch (error) {
+				return;
+			}
+		}
+
+		lobbyForm.addEventListener('submit', async (event) => {
 			event.preventDefault();
-			window.alert('Sala creada y lista para seguir editando.');
+			const roomName = document.getElementById('room-name').value.trim() || 'Sala';
+			const roomPassword = passwordToggle.checked ? passwordInput.value.trim() : '';
+			const roomNote = document.getElementById('lobby-note').value.trim();
+			const room = await window.RolGameState.createRoom({
+				name: roomName,
+				password: roomPassword,
+				note: roomNote,
+				loadSaveId: loadSaveSelect.value || null,
+				shopItems: collectShopItems()
+			});
+			window.RolGameState.setCurrentRoomId(room.id);
+			window.location.href = './owner.html';
 		});
+
+		loadSaves();
 	</script>
 </body>
 </html>

@@ -1,9 +1,8 @@
 (function () {
 	const STORAGE_KEY = 'rolVirtualGameState';
 	const CURRENT_PLAYER_KEY = 'rolVirtualCurrentPlayerId';
+	const CURRENT_ROOM_KEY = 'rolVirtualCurrentRoomId';
 	const CHANGE_EVENT = 'rol-game-state-changed';
-	const API_STATE = '/api/state';
-	const API_EVENTS = '/api/events';
 
 	const defaultShopItems = [
 		{ id: 'shop-1', title: 'Botiquin', price: '25 monedas' },
@@ -18,21 +17,9 @@
 
 	function makeDefaultTables(player) {
 		return [
-			{
-				id: makeId('table'),
-				title: 'Dinero',
-				content: 'Dinero inicial de ' + player.name + ': 0'
-			},
-			{
-				id: makeId('table'),
-				title: 'Mejoras',
-				content: 'Sin mejoras cargadas para ' + player.power
-			},
-			{
-				id: makeId('table'),
-				title: 'Notas',
-				content: 'Potencia activa: ' + player.power
-			}
+			{ id: makeId('table'), title: 'Dinero', content: 'Dinero inicial de ' + player.name + ': 0' },
+			{ id: makeId('table'), title: 'Mejoras', content: 'Sin mejoras cargadas para ' + player.power },
+			{ id: makeId('table'), title: 'Notas', content: 'Potencia activa: ' + player.power }
 		];
 	}
 
@@ -119,13 +106,6 @@
 		};
 	}
 
-	function emitChange(state) {
-		window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: state }));
-	}
-
-	let currentState = normalizeState(readLocalState());
-	let eventSource = null;
-
 	function readLocalState() {
 		try {
 			const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -135,11 +115,42 @@
 		}
 	}
 
+	function emitChange(state) {
+		window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: state }));
+	}
+
+	let currentState = normalizeState(readLocalState());
+	let eventSource = null;
+	let reconnectTimerId = null;
+
 	function persistLocal(state) {
 		currentState = normalizeState(state);
 		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
 		emitChange(currentState);
 		return currentState;
+	}
+
+	function getCurrentRoomId() {
+		return window.sessionStorage.getItem(CURRENT_ROOM_KEY) || window.localStorage.getItem(CURRENT_ROOM_KEY);
+	}
+
+	function setCurrentRoomId(roomId) {
+		window.sessionStorage.setItem(CURRENT_ROOM_KEY, roomId);
+		window.localStorage.setItem(CURRENT_ROOM_KEY, roomId);
+		resetEventSource();
+		refreshFromServer();
+		ensureEventSource();
+	}
+
+	function resetEventSource() {
+		if (reconnectTimerId) {
+			window.clearTimeout(reconnectTimerId);
+			reconnectTimerId = null;
+		}
+		if (eventSource) {
+			eventSource.close();
+			eventSource = null;
+		}
 	}
 
 	async function requestJson(url, options) {
@@ -150,26 +161,35 @@
 		return response.json();
 	}
 
-	async function postJson(url, body) {
-		try {
-			const state = await requestJson(url, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body),
-				keepalive: true
-			});
-			persistLocal(state);
-			return state;
-		} catch (error) {
-			return currentState;
+	function roomApi(path) {
+		const roomId = getCurrentRoomId();
+		if (!roomId) {
+			throw new Error('Room not selected');
 		}
+		return '/api/rooms/' + encodeURIComponent(roomId) + path;
+	}
+
+	async function postJson(url, body, persistStateResponse) {
+		const state = await requestJson(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body || {}),
+			keepalive: true
+		});
+		if (persistStateResponse) {
+			persistLocal(state);
+		}
+		return state;
 	}
 
 	async function refreshFromServer() {
+		const roomId = getCurrentRoomId();
+		if (!roomId) {
+			return currentState;
+		}
+
 		try {
-			const state = await requestJson(API_STATE, { method: 'GET' });
+			const state = await requestJson('/api/rooms/' + encodeURIComponent(roomId) + '/state', { method: 'GET' });
 			persistLocal(state);
 			return currentState;
 		} catch (error) {
@@ -178,19 +198,12 @@
 	}
 
 	function ensureEventSource() {
-		if (!('EventSource' in window) || eventSource) {
+		const roomId = getCurrentRoomId();
+		if (!roomId || !('EventSource' in window) || eventSource) {
 			return;
 		}
 
-		eventSource = new window.EventSource(API_EVENTS);
-		const reset = function () {
-			if (eventSource) {
-				eventSource.close();
-				eventSource = null;
-			}
-			window.setTimeout(ensureEventSource, 1500);
-		};
-
+		eventSource = new window.EventSource('/api/rooms/' + encodeURIComponent(roomId) + '/events');
 		eventSource.onmessage = function (event) {
 			try {
 				persistLocal(JSON.parse(event.data));
@@ -199,11 +212,37 @@
 			}
 		};
 
-		eventSource.onerror = reset;
+		eventSource.onerror = function () {
+			resetEventSource();
+			reconnectTimerId = window.setTimeout(ensureEventSource, 1500);
+		};
 	}
 
-	refreshFromServer();
-	ensureEventSource();
+	async function listRooms(activeOnly) {
+		const query = activeOnly ? '?active=1' : '';
+		const payload = await requestJson('/api/rooms' + query, { method: 'GET' });
+		return Array.isArray(payload.rooms) ? payload.rooms : [];
+	}
+
+	async function listSaves() {
+		const payload = await requestJson('/api/saves', { method: 'GET' });
+		return Array.isArray(payload.saves) ? payload.saves : [];
+	}
+
+	async function createRoom(config) {
+		const payload = await postJson('/api/rooms', config || {}, false);
+		return payload.room;
+	}
+
+	async function saveRoomSnapshot(name) {
+		const payload = await postJson(roomApi('/save'), { name }, false);
+		return payload.save;
+	}
+
+	async function setOwnerPresence(online) {
+		const payload = await postJson(roomApi('/owner-presence'), { online }, false);
+		return payload.room;
+	}
 
 	function loadState() {
 		return currentState;
@@ -228,10 +267,7 @@
 		const index = state.players.findIndex((item) => item.id === normalizedPlayer.id);
 
 		if (index >= 0) {
-			state.players[index] = {
-				...state.players[index],
-				...normalizedPlayer
-			};
+			state.players[index] = { ...state.players[index], ...normalizedPlayer };
 		} else {
 			state.players.push(normalizedPlayer);
 		}
@@ -245,7 +281,7 @@
 		}
 
 		saveState(state);
-		return postJson('/api/players/upsert', normalizedPlayer);
+		return postJson(roomApi('/players/upsert'), normalizedPlayer, true);
 	}
 
 	function updatePlayerTables(playerId, tables) {
@@ -256,28 +292,28 @@
 			content: String(table.content || '')
 		})) : [];
 		saveState(state);
-		return postJson('/api/player-tables/' + encodeURIComponent(playerId), { tables: state.playerTables[playerId] });
+		return postJson(roomApi('/player-tables/' + encodeURIComponent(playerId)), { tables: state.playerTables[playerId] }, true);
 	}
 
 	function updateShopItems(items) {
 		const state = loadState();
 		state.shopItems = normalizeShopItems(items);
 		saveState(state);
-		return postJson('/api/shop-items', { items: state.shopItems });
+		return postJson(roomApi('/shop-items'), { items: state.shopItems }, true);
 	}
 
 	function setCurrentTurn(playerId) {
 		const state = loadState();
 		state.currentTurnPlayerId = playerId;
 		saveState(state);
-		return postJson('/api/turn', { playerId });
+		return postJson(roomApi('/turn'), { playerId }, true);
 	}
 
 	function setMarkers(markers) {
 		const state = loadState();
 		state.markers = normalizeMarkers(markers);
 		saveState(state);
-		return postJson('/api/markers', { markers: state.markers });
+		return postJson(roomApi('/markers'), { markers: state.markers }, true);
 	}
 
 	function setLastRoll(roll) {
@@ -293,10 +329,10 @@
 		};
 		state.rollCooldownUntil = Number(roll.cooldownUntil || 0);
 		saveState(state);
-		return postJson('/api/last-roll', {
+		return postJson(roomApi('/last-roll'), {
 			...state.lastRoll,
 			cooldownUntil: state.rollCooldownUntil
-		});
+		}, true);
 	}
 
 	function subscribe(callback) {
@@ -323,12 +359,23 @@
 		};
 	}
 
+	refreshFromServer();
+	ensureEventSource();
+
 	window.RolGameState = {
 		makeId,
 		loadState,
 		saveState,
+		getCurrentRoomId,
+		setCurrentRoomId,
 		getCurrentPlayerId,
 		setCurrentPlayerId,
+		listRooms,
+		listSaves,
+		createRoom,
+		saveRoomSnapshot,
+		setOwnerPresence,
+		refreshFromServer,
 		upsertPlayer,
 		updatePlayerTables,
 		updateShopItems,

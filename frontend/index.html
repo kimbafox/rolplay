@@ -40,37 +40,7 @@
 							</div>
 						</div>
 
-						<div class="terminal-screen">
-							<article class="terminal-line">
-								<div class="prompt">&gt;</div>
-								<div class="room-info">
-									<strong>Sector Delta</strong>
-									<span>3/6 jugadores conectados</span>
-								</div>
-								<div class="room-state">Abierta</div>
-								<button class="join-button" type="button" data-room="Sector Delta">Unirse</button>
-							</article>
-
-							<article class="terminal-line">
-								<div class="prompt">&gt;</div>
-								<div class="room-info">
-									<strong>Fortaleza Norte</strong>
-									<span>5/8 jugadores conectados</span>
-								</div>
-								<div class="room-state">Lista</div>
-								<button class="join-button" type="button" data-room="Fortaleza Norte">Unirse</button>
-							</article>
-
-							<article class="terminal-line">
-								<div class="prompt">&gt;</div>
-								<div class="room-info">
-									<strong>Operacion Atlas</strong>
-									<span>1/4 jugadores conectados</span>
-								</div>
-								<div class="room-state">Nueva</div>
-								<button class="join-button" type="button" data-room="Operacion Atlas">Unirse</button>
-							</article>
-						</div>
+						<div class="terminal-screen" id="rooms-terminal"></div>
 					</div>
 
 				</section>
@@ -144,24 +114,68 @@
 
 	<script src="./game-state.js"></script>
 	<script>
-		const joinButtons = Array.from(document.querySelectorAll('.join-button'));
+		const roomsTerminal = document.getElementById('rooms-terminal');
 		const profileOverlay = document.getElementById('profile-overlay');
 		const profileClose = document.getElementById('profile-close');
 		const selectedRoom = document.getElementById('selected-room');
 		const confirmProfile = document.getElementById('confirm-profile');
 		const playerNameInput = document.getElementById('player-name');
 		const playerPowerInput = document.getElementById('player-power');
+		let selectedRoomState = null;
+
+		function escapeHtml(value) {
+			return String(value)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;');
+		}
+
+		function renderRooms(rooms) {
+			if (!rooms.length) {
+				roomsTerminal.innerHTML = '<div class="terminal-empty">No hay salas activas. Solo aparecen cuando el owner tiene la partida abierta.</div>';
+				return;
+			}
+
+			roomsTerminal.innerHTML = rooms.map((room) => (
+				'<article class="terminal-line">' +
+					'<div class="prompt">&gt;</div>' +
+					'<div class="room-info">' +
+						'<strong>' + escapeHtml(room.name) + '</strong>' +
+						'<span>' + String(room.playerCount) + ' jugador(es) conectados</span>' +
+					'</div>' +
+					'<div class="room-state">Activa</div>' +
+					'<button class="join-button" type="button" data-room-id="' + escapeHtml(room.id) + '" data-room-name="' + escapeHtml(room.name) + '">Unirse</button>' +
+				'</article>'
+			)).join('');
+		}
+
+		async function loadRooms() {
+			try {
+				const rooms = await window.RolGameState.listRooms(true);
+				renderRooms(rooms);
+			} catch (error) {
+				roomsTerminal.innerHTML = '<div class="terminal-empty">No se pudieron cargar las salas activas.</div>';
+			}
+		}
 
 		function getSelectedAvatar() {
 			const checked = document.querySelector('input[name="perfil"]:checked');
 			return checked ? checked.value : 'bigititoo';
 		}
 
-		joinButtons.forEach((button) => {
-			button.addEventListener('click', () => {
-				selectedRoom.textContent = button.dataset.room;
-				profileOverlay.hidden = false;
-			});
+		roomsTerminal.addEventListener('click', (event) => {
+			const button = event.target.closest('.join-button');
+			if (!button) {
+				return;
+			}
+
+			selectedRoomState = {
+				id: button.dataset.roomId,
+				name: button.dataset.roomName
+			};
+			selectedRoom.textContent = selectedRoomState.name;
+			profileOverlay.hidden = false;
 		});
 
 		profileClose.addEventListener('click', () => {
@@ -177,9 +191,15 @@
 		confirmProfile.addEventListener('click', () => {
 			const name = playerNameInput.value.trim() || 'Jugador';
 			const power = playerPowerInput.value;
-			const room = selectedRoom.textContent === '-' ? 'Sector Delta' : selectedRoom.textContent;
+			const room = selectedRoomState ? selectedRoomState.name : 'Sala';
 			const avatar = getSelectedAvatar();
 			const playerId = window.RolGameState.makeId('player');
+
+			if (!selectedRoomState) {
+				return;
+			}
+
+			window.RolGameState.setCurrentRoomId(selectedRoomState.id);
 
 			window.RolGameState.upsertPlayer({
 				id: playerId,
@@ -192,6 +212,9 @@
 			window.RolGameState.setCurrentPlayerId(playerId);
 			window.location.href = './player.html';
 		});
+
+		loadRooms();
+		window.setInterval(loadRooms, 10000);
 	</script>
 </body>
 </html>
