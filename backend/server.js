@@ -4,6 +4,7 @@ const path = require('path');
 const app = express();
 const frontendPath = path.join(__dirname, '..', 'frontend');
 const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || '0.0.0.0';
 
 const defaultShopItems = [
 	{ id: 'shop-1', title: 'Botiquin', price: '25 monedas' },
@@ -130,6 +131,10 @@ app.get('/api/state', (request, response) => {
 	response.json(gameState);
 });
 
+app.get('/health', (request, response) => {
+	response.status(200).json({ ok: true, port: PORT });
+});
+
 app.get('/api/events', (request, response) => {
 	response.setHeader('Content-Type', 'text/event-stream');
 	response.setHeader('Cache-Control', 'no-cache');
@@ -229,6 +234,6 @@ app.get('/', (request, response) => {
 	response.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-	console.log('Servidor listo en puerto ' + PORT);
+app.listen(PORT, HOST, () => {
+	console.log('Servidor listo en ' + HOST + ':' + PORT);
 });
