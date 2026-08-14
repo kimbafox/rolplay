@@ -1,0 +1,17 @@
+{
+	"name": "rol-virtual-tablero",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Tablero virtual de rol con owner, jugadores, mapa compartido y dado sincronizado.",
+	"main": "backend/server.js",
+	"scripts": {
+		"start": "node backend/server.js",
+		"dev": "node backend/server.js"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"dependencies": {
+		"express": "^4.21.2"
+	}
+}

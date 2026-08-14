@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Lobby de Salas</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="./index.css">
+</head>
+<body>
+	<main class="layout">
+		<section class="hero" aria-label="Ambientacion retro belica en pixel art">
+			<div class="hero-content">
+				<div class="hero-copy">
+					<h1>Frente de mando para crear y unirse a salas</h1>
+				</div>
+			</div>
+		</section>
+
+		<aside class="panel">
+			<div class="panel-shell">
+				<h2>Crear Sala</h2>
+
+				<section class="menu-block" aria-labelledby="crear-sala">
+					<h3 id="crear-sala">Menu de creacion</h3>
+					<a class="action" href="./crearlobby.html">Crear sala</a>
+				</section>
+
+				<section class="rooms" aria-labelledby="salas-disponibles">
+					<h3 id="salas-disponibles">Salas Disponibles</h3>
+					<div class="terminal">
+						<div class="terminal-head">
+							<span>Terminal de salas</span>
+							<div class="terminal-dots" aria-hidden="true">
+								<span></span>
+								<span></span>
+								<span></span>
+							</div>
+						</div>
+
+						<div class="terminal-screen">
+							<article class="terminal-line">
+								<div class="prompt">&gt;</div>
+								<div class="room-info">
+									<strong>Sector Delta</strong>
+									<span>3/6 jugadores conectados</span>
+								</div>
+								<div class="room-state">Abierta</div>
+								<button class="join-button" type="button" data-room="Sector Delta">Unirse</button>
+							</article>
+
+							<article class="terminal-line">
+								<div class="prompt">&gt;</div>
+								<div class="room-info">
+									<strong>Fortaleza Norte</strong>
+									<span>5/8 jugadores conectados</span>
+								</div>
+								<div class="room-state">Lista</div>
+								<button class="join-button" type="button" data-room="Fortaleza Norte">Unirse</button>
+							</article>
+
+							<article class="terminal-line">
+								<div class="prompt">&gt;</div>
+								<div class="room-info">
+									<strong>Operacion Atlas</strong>
+									<span>1/4 jugadores conectados</span>
+								</div>
+								<div class="room-state">Nueva</div>
+								<button class="join-button" type="button" data-room="Operacion Atlas">Unirse</button>
+							</article>
+						</div>
+					</div>
+
+				</section>
+			</div>
+		</aside>
+	</main>
+
+	<div class="profile-overlay" id="profile-overlay" hidden>
+		<section class="profile-block" id="profile-block" aria-labelledby="perfil-jugador">
+			<div class="profile-head">
+				<h3 id="perfil-jugador">Seleccion de perfil</h3>
+				<button class="action profile-close" id="profile-close" type="button">Cerrar</button>
+			</div>
+			<p class="profile-room">Sala elegida: <span id="selected-room">-</span></p>
+
+			<div class="profile-meta">
+				<div class="field">
+					<label for="player-name">Nombre</label>
+					<input id="player-name" name="player-name" type="text" placeholder="Tu nombre">
+				</div>
+
+				<div class="field">
+					<label for="player-power">Potencia</label>
+					<select id="player-power" name="player-power">
+						<option>Estados Unidos</option>
+						<option>Gran Bretana</option>
+						<option>Union Sovietica</option>
+						<option>Alemania</option>
+						<option>Japon</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="avatar-grid">
+				<label class="avatar-option">
+					<input type="radio" name="perfil" value="bigititoo" checked>
+					<span class="avatar-card">
+						<img src="./assets/perfiles/bigititoo.png" alt="Perfil bigititoo">
+						<span class="avatar-name">Perfil 1</span>
+					</span>
+				</label>
+
+				<label class="avatar-option">
+					<input type="radio" name="perfil" value="musulini">
+					<span class="avatar-card">
+						<img src="./assets/perfiles/musulini.png" alt="Perfil musulini">
+						<span class="avatar-name">Perfil 2</span>
+					</span>
+				</label>
+
+				<label class="avatar-option">
+					<input type="radio" name="perfil" value="rosell">
+					<span class="avatar-card">
+						<img src="./assets/perfiles/rosell.png" alt="Perfil rosell">
+						<span class="avatar-name">Perfil 3</span>
+					</span>
+				</label>
+
+				<label class="avatar-option">
+					<input type="radio" name="perfil" value="stalin">
+					<span class="avatar-card">
+						<img src="./assets/perfiles/stalin.png" alt="Perfil stalin">
+						<span class="avatar-name">Perfil 4</span>
+					</span>
+				</label>
+			</div>
+
+			<button class="profile-action" id="confirm-profile" type="button">Confirmar perfil</button>
+		</section>
+	</div>
+
+	<script src="./game-state.js"></script>
+	<script>
+		const joinButtons = Array.from(document.querySelectorAll('.join-button'));
+		const profileOverlay = document.getElementById('profile-overlay');
+		const profileClose = document.getElementById('profile-close');
+		const selectedRoom = document.getElementById('selected-room');
+		const confirmProfile = document.getElementById('confirm-profile');
+		const playerNameInput = document.getElementById('player-name');
+		const playerPowerInput = document.getElementById('player-power');
+
+		function getSelectedAvatar() {
+			const checked = document.querySelector('input[name="perfil"]:checked');
+			return checked ? checked.value : 'bigititoo';
+		}
+
+		joinButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				selectedRoom.textContent = button.dataset.room;
+				profileOverlay.hidden = false;
+			});
+		});
+
+		profileClose.addEventListener('click', () => {
+			profileOverlay.hidden = true;
+		});
+
+		profileOverlay.addEventListener('click', (event) => {
+			if (event.target === profileOverlay) {
+				profileOverlay.hidden = true;
+			}
+		});
+
+		confirmProfile.addEventListener('click', () => {
+			const name = playerNameInput.value.trim() || 'Jugador';
+			const power = playerPowerInput.value;
+			const room = selectedRoom.textContent === '-' ? 'Sector Delta' : selectedRoom.textContent;
+			const avatar = getSelectedAvatar();
+			const playerId = window.RolGameState.makeId('player');
+
+			window.RolGameState.upsertPlayer({
+				id: playerId,
+				name,
+				power,
+				avatar,
+				room,
+				joinedAt: Date.now()
+			});
+			window.RolGameState.setCurrentPlayerId(playerId);
+			window.location.href = './player.html';
+		});
+	</script>
+</body>
+</html>
