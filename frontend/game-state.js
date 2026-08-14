@@ -234,6 +234,13 @@
 		return payload.room;
 	}
 
+	function exportCurrentRoomState() {
+		return {
+			roomId: getCurrentRoomId(),
+			state: loadState()
+		};
+	}
+
 	async function saveRoomSnapshot(name) {
 		const payload = await postJson(roomApi('/save'), { name }, false);
 		return payload.save;
@@ -373,6 +380,7 @@
 		listRooms,
 		listSaves,
 		createRoom,
+		exportCurrentRoomState,
 		saveRoomSnapshot,
 		setOwnerPresence,
 		refreshFromServer,

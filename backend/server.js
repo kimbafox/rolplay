@@ -247,6 +247,7 @@ function saveRoomState(roomId, nextState) {
 
 function createRoom(data) {
 	const loadSave = data.loadSaveId ? getSave(data.loadSaveId) : null;
+	const importedState = data.importedState && typeof data.importedState === 'object' ? data.importedState : null;
 	const room = normalizeRoom({
 		id: makeRoomId(data.name || 'sala'),
 		name: data.name,
@@ -256,10 +257,10 @@ function createRoom(data) {
 		createdAt: Date.now(),
 		updatedAt: Date.now(),
 		lastOwnerPingAt: 0,
-		state: loadSave ? loadSave.state : {
+		state: importedState || (loadSave ? loadSave.state : {
 			shopItems: data.shopItems,
 			playerTables: {}
-		},
+		}),
 		sourceSaveId: loadSave ? loadSave.id : null
 	});
 	store.rooms.push(room);
