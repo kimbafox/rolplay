@@ -1,35 +1,831 @@
-# Rol virtual
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Mapa del Jugador</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg: #150b0b;
+			--panel: #3b1717;
+			--panel-dark: #291010;
+			--gold: #d0a44a;
+			--gold-soft: #efcb7b;
+			--ink: #f8e3b8;
+			--muted: #d4ba8e;
+			--line: #6c4a1f;
+			--shadow: rgba(0, 0, 0, 0.38);
+		}
 
-Este programa es una mesa virtual para jugar rol de guerra por turnos.
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
 
-Hay dos vistas:
+		body {
+			min-height: 100vh;
+			background:
+				repeating-linear-gradient(
+					180deg,
+					#431616 0,
+					#431616 10px,
+					#2a1010 10px,
+					#2a1010 20px
+				),
+				linear-gradient(180deg, rgba(15, 5, 5, 0.35), rgba(15, 5, 5, 0.82));
+			color: var(--ink);
+			font-family: 'VT323', monospace;
+			image-rendering: pixelated;
+		}
 
-- El owner controla el turno, el mapa, las tablas privadas y la tienda.
-- Los jugadores solo pueden ver su informacion y tirar el dado cuando es su turno.
+		button,
+		h1,
+		h2,
+		h3,
+		.result-number {
+			font-family: 'Press Start 2P', cursive;
+		}
 
-## Que hace
+		.layout {
+			min-height: 100vh;
+			display: grid;
+			grid-template-columns: minmax(0, 1.45fr) 220px;
+			grid-template-rows: minmax(0, 0.88fr) 165px;
+			gap: 14px;
+			padding: 14px;
+		}
 
-- Muestra un mapa compartido.
-- El owner pone y quita banderas.
-- El owner decide de quien es el turno.
-- Cada jugador ve su perfil, su potencia, su tienda y sus tablas.
-- Las tiradas de dado se ven para todos.
+		.map-panel,
+		.shop-panel,
+		.boards-panel {
+			border: 5px solid var(--line);
+			box-shadow: 10px 10px 0 var(--shadow);
+			position: relative;
+			overflow: hidden;
+		}
 
-## Como arrancarlo
+		.map-panel {
+			grid-column: 1;
+			grid-row: 1;
+			min-height: 0;
+			background:
+				linear-gradient(180deg, rgba(24, 8, 8, 0.28), rgba(24, 8, 8, 0.6)),
+				url('./assets/mapa.jpg') center center / contain no-repeat;
+			background-color: #1d0d0d;
+		}
 
-1. Instala dependencias con `npm install`.
-2. Inicia el servidor con `npm start`.
-3. Abre `http://localhost:3000`.
+		.map-panel::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background:
+				repeating-linear-gradient(
+					90deg,
+					rgba(239, 203, 123, 0.08) 0,
+					rgba(239, 203, 123, 0.08) 8px,
+					transparent 8px,
+					transparent 18px
+				),
+				repeating-linear-gradient(
+					0deg,
+					rgba(0, 0, 0, 0.08) 0,
+					rgba(0, 0, 0, 0.08) 4px,
+					transparent 4px,
+					transparent 10px
+				);
+			pointer-events: none;
+		}
 
-## Railway
+		.map-ui {
+			position: relative;
+			z-index: 1;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			padding: 16px;
+		}
 
-- Usa Node.js.
-- Railway solo necesita el comando de inicio: `npm start`.
-- El archivo principal es [backend/server.js](backend/server.js).
+		.map-stage {
+			position: absolute;
+			inset: 0;
+			z-index: 0;
+		}
 
-## Estructura simple
+		.marker-layer {
+			position: absolute;
+			inset: 0;
+		}
 
-- [frontend/index.html](frontend/index.html): entrar o unirse a sala.
-- [frontend/player.html](frontend/player.html): vista del jugador.
-- [frontend/owner.html](frontend/owner.html): vista del owner.
-- [backend/server.js](backend/server.js): servidor y sincronizacion.
+		.flag {
+			position: absolute;
+			width: 24px;
+			height: 28px;
+			transform: translate(-8px, -24px);
+			pointer-events: none;
+		}
+
+		.flag::before {
+			content: '';
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 4px;
+			height: 28px;
+			background: #f0dfb2;
+			box-shadow: 2px 0 0 rgba(0, 0, 0, 0.35);
+		}
+
+		.flag::after {
+			content: '';
+			position: absolute;
+			left: 4px;
+			top: 0;
+			width: 14px;
+			height: 10px;
+			background: var(--flag-color, #d83a30);
+			clip-path: polygon(0 0, 100% 0, 72% 50%, 100% 100%, 0 100%);
+			border: 2px solid rgba(0, 0, 0, 0.35);
+		}
+
+		.map-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-start;
+			gap: 16px;
+		}
+
+		.title-box,
+		.result-box,
+		.profile-card,
+		.shop-inner,
+		.boards-inner {
+			background: rgba(45, 14, 14, 0.82);
+			border: 4px solid rgba(208, 164, 74, 0.8);
+		}
+
+		.title-box {
+			padding: 10px 12px;
+			max-width: 280px;
+		}
+
+		.title-box h1 {
+			font-size: 0.82rem;
+			line-height: 1.55;
+			color: var(--gold-soft);
+			text-transform: uppercase;
+		}
+
+		.title-box p,
+		.shop-item span,
+		.boards-inner p {
+			font-size: 1.15rem;
+			line-height: 1.15;
+			color: var(--muted);
+		}
+
+		.dice-wrap {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.dice-controls {
+			display: flex;
+			gap: 6px;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.dice-mode {
+			border: 3px solid #1a0c0c;
+			background: linear-gradient(180deg, #b14940, #741e1c);
+			color: #ffe4d2;
+			padding: 6px 8px;
+			font-size: 0.45rem;
+			line-height: 1.5;
+			text-transform: uppercase;
+			cursor: pointer;
+			box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.28);
+		}
+
+		.dice-mode.active {
+			background: linear-gradient(180deg, #efcb7b, #cf8f37);
+			color: #2b100f;
+		}
+
+		.dice-button {
+			width: 56px;
+			height: 56px;
+			border: 4px solid #1a0c0c;
+			background:
+				repeating-linear-gradient(
+					135deg,
+					#efcb7b 0,
+					#efcb7b 10px,
+					#cf8f37 10px,
+					#cf8f37 20px
+				),
+				linear-gradient(180deg, #f3d796, #d09437);
+			color: #2b100f;
+			font-size: 0.92rem;
+			cursor: pointer;
+			box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.32);
+			animation: idleDice 1.6s steps(2) infinite;
+		}
+
+		.dice-button:hover {
+			animation-duration: 0.7s;
+		}
+
+		.dice-button.rolling {
+			animation: shakeDice 0.6s steps(6) infinite;
+		}
+
+		.dice-button:disabled,
+		.dice-mode:disabled {
+			cursor: not-allowed;
+			opacity: 0.65;
+		}
+
+		.result-box {
+			min-width: 118px;
+			padding: 8px 10px;
+			text-align: center;
+		}
+
+		.roll-meta {
+			min-width: 160px;
+			padding: 8px 10px;
+			background: rgba(45, 14, 14, 0.82);
+			border: 4px solid rgba(208, 164, 74, 0.8);
+			display: grid;
+			gap: 4px;
+			text-align: center;
+		}
+
+		.roll-meta strong,
+		.roll-meta span {
+			display: block;
+		}
+
+		.roll-meta strong {
+			font-size: 0.58rem;
+			line-height: 1.5;
+			text-transform: uppercase;
+			color: var(--ink);
+		}
+
+		.roll-meta span {
+			font-size: 1rem;
+			line-height: 1.1;
+			color: var(--muted);
+		}
+
+		.cooldown-text {
+			margin-top: 8px;
+			font-size: 1rem;
+			line-height: 1.1;
+			color: var(--muted);
+		}
+
+		.result-box h2,
+		.profile-card h2,
+		.shop-inner h2,
+		.boards-inner h2 {
+			font-size: 0.72rem;
+			line-height: 1.6;
+			text-transform: uppercase;
+			color: var(--gold-soft);
+		}
+
+		.profile-card {
+			padding: 10px;
+			display: grid;
+			gap: 8px;
+		}
+
+		.profile-avatar {
+			width: 100%;
+			height: 96px;
+			object-fit: contain;
+			background: rgba(24, 8, 8, 0.9);
+			border: 3px solid rgba(208, 164, 74, 0.55);
+			padding: 4px;
+		}
+
+		.profile-text strong,
+		.profile-text span {
+			display: block;
+		}
+
+		.profile-text strong {
+			font-size: 1.2rem;
+			line-height: 1.1;
+			color: var(--ink);
+		}
+
+		.profile-text span {
+			margin-top: 4px;
+			font-size: 1rem;
+			line-height: 1.1;
+			color: var(--muted);
+		}
+
+		.result-number {
+			margin-top: 10px;
+			font-size: clamp(1.6rem, 4vw, 3rem);
+			line-height: 1;
+			color: #fff1c7;
+			text-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+			transform-origin: center;
+		}
+
+		.result-number.show {
+			animation: popResult 0.45s ease-out;
+		}
+
+		.shop-panel {
+			grid-column: 2;
+			grid-row: 1 / span 2;
+			background:
+				repeating-linear-gradient(
+					180deg,
+					rgba(208, 164, 74, 0.14) 0,
+					rgba(208, 164, 74, 0.14) 16px,
+					transparent 16px,
+					transparent 42px
+				),
+				linear-gradient(180deg, #411919, #250e0e);
+		}
+
+		.shop-inner {
+			height: 100%;
+			padding: 12px 10px;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.shop-details {
+			display: grid;
+			gap: 8px;
+		}
+
+		.shop-details summary {
+			list-style: none;
+			cursor: pointer;
+		}
+
+		.shop-details summary::-webkit-details-marker {
+			display: none;
+		}
+
+		.shop-list {
+			display: grid;
+			gap: 10px;
+		}
+
+		.shop-item {
+			padding: 8px 7px;
+			border: 3px solid rgba(208, 164, 74, 0.55);
+			background: rgba(26, 9, 9, 0.52);
+		}
+
+		.shop-item h3 {
+			font-size: 0.54rem;
+			line-height: 1.7;
+			color: var(--ink);
+			text-transform: uppercase;
+			margin-bottom: 6px;
+		}
+
+		.boards-panel {
+			grid-column: 1;
+			grid-row: 2;
+			background:
+				repeating-linear-gradient(
+					90deg,
+					rgba(208, 164, 74, 0.08) 0,
+					rgba(208, 164, 74, 0.08) 10px,
+					transparent 10px,
+					transparent 24px
+				),
+				linear-gradient(180deg, #311111, #240c0c);
+		}
+
+		.boards-inner {
+			height: 100%;
+			padding: 12px 14px;
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 10px;
+			align-items: stretch;
+		}
+
+		.board-card {
+			padding: 10px;
+			border: 3px solid rgba(208, 164, 74, 0.58);
+			background: rgba(24, 8, 8, 0.52);
+		}
+
+		.board-card h3 {
+			font-size: 0.58rem;
+			line-height: 1.6;
+			color: var(--ink);
+			margin-bottom: 8px;
+			text-transform: uppercase;
+		}
+
+		.board-card p {
+			font-size: 1.05rem;
+		}
+
+		.empty-state {
+			font-size: 1.05rem;
+			line-height: 1.15;
+			color: var(--muted);
+		}
+
+		@keyframes idleDice {
+			0%,
+			100% {
+				transform: translateY(0);
+			}
+
+			50% {
+				transform: translateY(-4px);
+			}
+		}
+
+		@keyframes shakeDice {
+			0% {
+				transform: translate(0, 0) rotate(0deg) scale(1);
+			}
+
+			25% {
+				transform: translate(-4px, 3px) rotate(-8deg) scale(1.04);
+			}
+
+			50% {
+				transform: translate(5px, -2px) rotate(8deg) scale(0.98);
+			}
+
+			75% {
+				transform: translate(-3px, -4px) rotate(-6deg) scale(1.03);
+			}
+
+			100% {
+				transform: translate(0, 0) rotate(0deg) scale(1);
+			}
+		}
+
+		@keyframes popResult {
+			0% {
+				transform: scale(0.65);
+				opacity: 0.2;
+			}
+
+			70% {
+				transform: scale(1.18);
+				opacity: 1;
+			}
+
+			100% {
+				transform: scale(1);
+			}
+		}
+
+		@media (max-width: 980px) {
+			.layout {
+				grid-template-columns: 1fr;
+				grid-template-rows: minmax(420px, 1fr) 160px auto;
+			}
+
+			.shop-panel {
+				grid-column: 1;
+				grid-row: 2;
+			}
+
+			.boards-panel {
+				grid-column: 1;
+				grid-row: 3;
+			}
+
+			.shop-inner,
+			.boards-inner {
+				grid-template-columns: repeat(3, 1fr);
+			}
+		}
+
+		@media (max-width: 720px) {
+			.layout {
+				padding: 12px;
+				gap: 12px;
+			}
+
+			.map-header {
+				flex-direction: column;
+				align-items: stretch;
+			}
+
+			.dice-wrap {
+				justify-content: space-between;
+			}
+
+			.shop-inner,
+			.boards-inner {
+				display: grid;
+				grid-template-columns: 1fr;
+			}
+
+			.result-box {
+				min-width: 0;
+			}
+		}
+	</style>
+</head>
+<body>
+	<main class="layout">
+		<section class="map-panel" aria-label="Mapa principal">
+			<div class="map-ui">
+				<div class="map-header">
+					<div class="title-box">
+						<h1>Mapa</h1>
+						<p>Zona central de juego</p>
+					</div>
+
+					<div class="dice-wrap">
+						<div class="dice-controls" aria-label="Tipo de dado">
+							<button class="dice-mode" type="button" data-sides="4">D4</button>
+							<button class="dice-mode active" type="button" data-sides="6">D6</button>
+							<button class="dice-mode" type="button" data-sides="12">D12</button>
+						</div>
+						<button class="dice-button" id="roll-dice" type="button" aria-label="Tirar dado">D6</button>
+						<div class="result-box" aria-live="polite">
+							<h2>Resultado</h2>
+							<div class="result-number" id="dice-result">1</div>
+							<div class="cooldown-text" id="cooldown-text">Listo</div>
+						</div>
+						<div class="roll-meta">
+							<strong id="turn-player-name">Jugador</strong>
+							<span id="turn-player-power">Potencia: -</span>
+							<span id="turn-status">Esperando turno</span>
+							<span id="last-roll-info">Sin tiradas.</span>
+						</div>
+					</div>
+				</div>
+				<div class="map-stage" aria-hidden="true">
+					<div class="marker-layer" id="marker-layer"></div>
+				</div>
+			</div>
+		</section>
+
+		<aside class="shop-panel" aria-label="Tienda">
+			<div class="shop-inner">
+				<div class="profile-card" aria-label="Perfil del jugador">
+					<h2>Perfil</h2>
+					<img class="profile-avatar" id="profile-avatar" src="./assets/perfiles/bigititoo.png" alt="Foto de perfil del jugador">
+					<div class="profile-text">
+						<strong id="profile-name">Jugador</strong>
+						<span id="profile-power">Potencia: Estados Unidos</span>
+					</div>
+				</div>
+
+				<details class="shop-details" open>
+					<summary><h2>Tienda</h2></summary>
+					<div class="shop-list" id="shop-list"></div>
+				</details>
+			</div>
+		</aside>
+
+		<section class="boards-panel" aria-label="Tablones">
+			<div class="boards-inner" id="player-tables"></div>
+		</section>
+	</main>
+
+	<script src="./game-state.js"></script>
+	<script>
+		const rollButton = document.getElementById('roll-dice');
+		const resultNode = document.getElementById('dice-result');
+		const cooldownNode = document.getElementById('cooldown-text');
+		const diceModes = Array.from(document.querySelectorAll('.dice-mode'));
+		const markerLayer = document.getElementById('marker-layer');
+		const shopList = document.getElementById('shop-list');
+		const playerTables = document.getElementById('player-tables');
+		const profileAvatar = document.getElementById('profile-avatar');
+		const profileName = document.getElementById('profile-name');
+		const profilePower = document.getElementById('profile-power');
+		const turnPlayerName = document.getElementById('turn-player-name');
+		const turnPlayerPower = document.getElementById('turn-player-power');
+		const turnStatus = document.getElementById('turn-status');
+		const lastRollInfo = document.getElementById('last-roll-info');
+		const currentPlayerId = window.RolGameState.getCurrentPlayerId();
+		let currentSides = 6;
+		let lastRenderedRollAt = null;
+
+		function randomRoll(sides) {
+			return Math.floor(Math.random() * sides) + 1;
+		}
+
+		function setDiceMode(sides) {
+			if (rollButton.disabled) {
+				return;
+			}
+
+			currentSides = sides;
+			rollButton.textContent = 'D' + String(sides);
+			rollButton.setAttribute('aria-label', 'Tirar dado de ' + String(sides));
+			diceModes.forEach((button) => {
+				button.classList.toggle('active', Number(button.dataset.sides) === sides);
+			});
+		}
+
+		function setAnimatedResult(value) {
+			resultNode.classList.remove('show');
+			void resultNode.offsetWidth;
+			resultNode.textContent = String(value);
+			resultNode.classList.add('show');
+		}
+
+		function setControlsDisabled(disabled) {
+			rollButton.disabled = disabled;
+			diceModes.forEach((button) => {
+				button.disabled = disabled;
+			});
+		}
+
+		function createFlagElement(marker) {
+			const flag = document.createElement('div');
+			flag.className = 'flag';
+			flag.style.left = marker.x + '%';
+			flag.style.top = marker.y + '%';
+			flag.style.setProperty('--flag-color', marker.color);
+			return flag;
+		}
+
+		function renderMarkers(state) {
+			markerLayer.innerHTML = '';
+			state.markers.forEach((marker) => {
+				markerLayer.appendChild(createFlagElement(marker));
+			});
+		}
+
+		function renderShop(state) {
+			shopList.innerHTML = '';
+			state.shopItems.forEach((item) => {
+				const card = document.createElement('div');
+				card.className = 'shop-item';
+				card.innerHTML = '<h3>' + item.title + '</h3><span>' + item.price + '</span>';
+				shopList.appendChild(card);
+			});
+		}
+
+		function renderTables(state, player) {
+			playerTables.innerHTML = '';
+			if (!player) {
+				playerTables.innerHTML = '<div class="board-card"><h2>Tablas</h2><p class="empty-state">Debes entrar desde una sala para ver tus tablas.</p></div>';
+				return;
+			}
+
+			const tables = state.playerTables[player.id] || [];
+			if (tables.length === 0) {
+				playerTables.innerHTML = '<div class="board-card"><h2>Tablas</h2><p class="empty-state">El owner todavia no cargo tablas para tu perfil.</p></div>';
+				return;
+			}
+
+			tables.forEach((table) => {
+				const card = document.createElement('div');
+				card.className = 'board-card';
+				card.innerHTML = '<h3>' + table.title + '</h3><p>' + table.content + '</p>';
+				playerTables.appendChild(card);
+			});
+		}
+
+		function renderTurnState(state, player) {
+			const turnPlayer = state.players.find((item) => item.id === state.currentTurnPlayerId) || null;
+			const cooldownRemaining = Math.max(0, Math.ceil((state.rollCooldownUntil - Date.now()) / 1000));
+
+			if (state.lastRoll && state.lastRoll.at !== lastRenderedRollAt && !rollButton.classList.contains('rolling')) {
+				setAnimatedResult(state.lastRoll.value);
+				lastRenderedRollAt = state.lastRoll.at;
+				lastRollInfo.textContent = 'Ultimo tiro: ' + state.lastRoll.playerName + ' saco ' + state.lastRoll.value + ' en D' + state.lastRoll.sides;
+			} else if (state.lastRoll) {
+				lastRollInfo.textContent = 'Ultimo tiro: ' + state.lastRoll.playerName + ' saco ' + state.lastRoll.value + ' en D' + state.lastRoll.sides;
+			} else if (!state.lastRoll) {
+				lastRenderedRollAt = null;
+				lastRollInfo.textContent = 'Sin tiradas.';
+			}
+
+			if (!player) {
+				turnPlayerName.textContent = 'Sin perfil';
+				turnPlayerPower.textContent = 'Potencia: -';
+				turnStatus.textContent = 'No disponible';
+				cooldownNode.textContent = 'Sin acceso';
+				setControlsDisabled(true);
+				return;
+			}
+
+			turnPlayerName.textContent = player.name;
+			turnPlayerPower.textContent = 'Potencia: ' + player.power;
+			const isTurn = state.currentTurnPlayerId === player.id;
+
+			if (cooldownRemaining > 0) {
+				cooldownNode.textContent = 'Cooldown: ' + String(cooldownRemaining) + 's';
+				setControlsDisabled(true);
+				turnStatus.textContent = isTurn ? 'Tu turno' : 'Turno de ' + (turnPlayer ? turnPlayer.name : 'otro jugador');
+				return;
+			}
+
+			if (!isTurn) {
+				cooldownNode.textContent = 'Esperando';
+				turnStatus.textContent = 'Turno de ' + (turnPlayer ? turnPlayer.name : 'otro jugador');
+				setControlsDisabled(true);
+				return;
+			}
+
+			cooldownNode.textContent = 'Listo';
+			turnStatus.textContent = 'Tu turno';
+			setControlsDisabled(false);
+		}
+
+		function renderProfile(state) {
+			const player = state.players.find((item) => item.id === currentPlayerId) || null;
+
+			if (!player) {
+				profileAvatar.src = './assets/perfiles/bigititoo.png';
+				profileName.textContent = 'Jugador';
+				profilePower.textContent = 'Potencia: -';
+				renderTables(state, null);
+				renderTurnState(state, null);
+				return;
+			}
+
+			profileAvatar.src = './assets/perfiles/' + player.avatar + '.png';
+			profileName.textContent = player.name;
+			profilePower.textContent = 'Potencia: ' + player.power;
+			renderTables(state, player);
+			renderTurnState(state, player);
+		}
+
+		function renderState() {
+			const state = window.RolGameState.loadState();
+			renderMarkers(state);
+			renderShop(state);
+			renderProfile(state);
+		}
+
+		function rollDice() {
+			const state = window.RolGameState.loadState();
+			const player = state.players.find((item) => item.id === currentPlayerId);
+			const cooldownRemaining = Math.max(0, Math.ceil((state.rollCooldownUntil - Date.now()) / 1000));
+
+			if (!player || state.currentTurnPlayerId !== player.id || cooldownRemaining > 0) {
+				return;
+			}
+
+			rollButton.disabled = true;
+			rollButton.classList.add('rolling');
+
+			const animation = window.setInterval(() => {
+				const preview = randomRoll(currentSides);
+				resultNode.textContent = String(preview);
+			}, 90);
+
+			window.setTimeout(() => {
+				window.clearInterval(animation);
+				const finalValue = randomRoll(currentSides);
+				rollButton.classList.remove('rolling');
+				setAnimatedResult(finalValue);
+				window.RolGameState.setLastRoll({
+					playerId: player.id,
+					playerName: player.name,
+					power: player.power,
+					avatar: player.avatar,
+					sides: currentSides,
+					value: finalValue,
+					at: Date.now(),
+					cooldownUntil: Date.now() + 10000
+				});
+				renderState();
+			}, 850);
+		}
+
+		diceModes.forEach((button) => {
+			button.addEventListener('click', () => {
+				setDiceMode(Number(button.dataset.sides));
+			});
+		});
+
+		window.RolGameState.subscribe(renderState);
+		window.setInterval(renderState, 1000);
+		renderState();
+		rollButton.addEventListener('click', rollDice);
+	</script>
+</body>
+</html>

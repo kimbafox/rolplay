@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Crear Lobby</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="./crearlobby.css">
+</head>
+<body>
+	<main class="page">
+		<section class="shell">
+			<header class="topbar">
+				<div>
+					<h1>Crear Sala</h1>
+					<p>Configura el lobby, edita sus tablas y deja solo las categorias que quieras usar.</p>
+				</div>
+				<div class="pill">Panel del owner</div>
+			</header>
+
+			<form class="lobby-form" id="lobby-form">
+				<div class="field">
+					<label for="room-name">Nombre de sala</label>
+					<input id="room-name" name="room-name" type="text" value="Operacion Acero" required>
+				</div>
+
+				<div class="field">
+					<label for="room-password">Contrasena</label>
+					<div class="password-group">
+						<label class="password-toggle">
+							<input id="use-password" type="checkbox">
+							<span>Usar contrasena</span>
+						</label>
+						<input id="room-password" name="room-password" type="text" placeholder="Clave privada" class="hidden">
+					</div>
+				</div>
+
+				<div class="field">
+					<label for="lobby-note">Nota</label>
+					<input id="lobby-note" name="lobby-note" type="text" value="Lobby editable listo para la partida">
+				</div>
+
+				<div class="field">
+					<label for="load-save">Cargar avance guardado</label>
+					<select id="load-save" name="load-save">
+						<option value="">Partida nueva</option>
+					</select>
+				</div>
+
+				<div class="create-actions">
+					<button class="button" type="submit">Crear Sala</button>
+				</div>
+			</form>
+
+			<div class="content-grid">
+				<section class="tables-stack" aria-label="Tablas del lobby">
+					<article class="table-card">
+						<details class="collapsible" open>
+							<summary>
+								<span>Costos generales y construccion</span>
+								<span class="summary-meta">Edificios base</span>
+							</summary>
+							<div class="table-wrap">
+								<table>
+									<thead>
+										<tr>
+											<th>Edificio</th>
+											<th>Costo</th>
+											<th>Produccion</th>
+											<th>Tiempo</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td><input value="Refineria I"></td>
+											<td><input value="1000"></td>
+											<td><input value="8"></td>
+											<td><input value="2 turnos"></td>
+											<td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td>
+										</tr>
+										<tr>
+											<td><input value="Refineria II"></td>
+											<td><input value="1500"></td>
+											<td><input value="20"></td>
+											<td><input value="3 turnos"></td>
+											<td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td>
+										</tr>
+										<tr>
+											<td><input value="Refineria III"></td>
+											<td><input value="3000"></td>
+											<td><input value="50"></td>
+											<td><input value="5 turnos"></td>
+											<td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td>
+										</tr>
+										<tr>
+											<td><input value="Centro I"></td>
+											<td><input value="1000"></td>
+											<td><input value="4"></td>
+											<td><input value="2 turnos"></td>
+											<td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td>
+										</tr>
+										<tr>
+											<td><input value="Centro II"></td>
+											<td><input value="1500"></td>
+											<td><input value="10"></td>
+											<td><input value="4 turnos"></td>
+											<td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td>
+										</tr>
+										<tr>
+											<td><input value="Centro III"></td>
+											<td><input value="3500"></td>
+											<td><input value="25"></td>
+											<td><input value="6 turnos"></td>
+											<td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</details>
+					</article>
+
+					<article class="table-card">
+						<details class="collapsible">
+							<summary>
+								<span>Investigacion nivel 1</span>
+								<span class="summary-meta">Inicio de partida</span>
+							</summary>
+							<div class="table-wrap">
+								<table>
+									<thead>
+										<tr>
+											<th>Investigacion</th>
+											<th>Dinero</th>
+											<th>Ciencia</th>
+											<th>Turnos</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr><td><input value="Home Guard II"></td><td><input value="20"></td><td><input value="15"></td><td><input value="1"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Rifle"></td><td><input value="35"></td><td><input value="25"></td><td><input value="1"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Rifle II"></td><td><input value="50"></td><td><input value="35"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Rifle III"></td><td><input value="70"></td><td><input value="50"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Scout"></td><td><input value="45"></td><td><input value="35"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="SMG"></td><td><input value="55"></td><td><input value="40"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="SMG II"></td><td><input value="75"></td><td><input value="55"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="SMG III"></td><td><input value="100"></td><td><input value="70"></td><td><input value="3"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Medic"></td><td><input value="35"></td><td><input value="25"></td><td><input value="1"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Engineer"></td><td><input value="45"></td><td><input value="35"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Saper"></td><td><input value="60"></td><td><input value="45"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Radioman"></td><td><input value="60"></td><td><input value="45"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Tankman"></td><td><input value="40"></td><td><input value="30"></td><td><input value="1"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Jeep"></td><td><input value="70"></td><td><input value="50"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Camion"></td><td><input value="80"></td><td><input value="60"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="BTR"></td><td><input value="80"></td><td><input value="60"></td><td><input value="2"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Tanque Ligero I"></td><td><input value="120"></td><td><input value="90"></td><td><input value="3"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Tanque Ligero II"></td><td><input value="170"></td><td><input value="130"></td><td><input value="3"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+									</tbody>
+								</table>
+							</div>
+						</details>
+					</article>
+
+					<article class="table-card">
+						<details class="collapsible">
+							<summary>
+								<span>Investigacion nivel 2 y 3</span>
+								<span class="summary-meta">Version resumida</span>
+							</summary>
+							<div class="table-wrap">
+								<table>
+									<thead>
+										<tr>
+											<th>Investigacion</th>
+											<th>Dinero</th>
+											<th>Ciencia</th>
+											<th>Turnos</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr><td><input value="MG"></td><td><input value="150"></td><td><input value="120"></td><td><input value="3"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Sniper"></td><td><input value="200"></td><td><input value="150"></td><td><input value="3"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Bazooka"></td><td><input value="260"></td><td><input value="200"></td><td><input value="4"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Flamer"></td><td><input value="240"></td><td><input value="180"></td><td><input value="4"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Squad Leader"></td><td><input value="180"></td><td><input value="140"></td><td><input value="3"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Sturmovik I"></td><td><input value="350"></td><td><input value="260"></td><td><input value="4"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Sturmovik VI"></td><td><input value="1000"></td><td><input value="760"></td><td><input value="6"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Elite I"></td><td><input value="800"></td><td><input value="600"></td><td><input value="5"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Elite VI"></td><td><input value="2100"></td><td><input value="1600"></td><td><input value="7"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Unidad Especial I"></td><td><input value="1800"></td><td><input value="1400"></td><td><input value="6"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Tanque Pesado II"></td><td><input value="2500"></td><td><input value="1900"></td><td><input value="8"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+									</tbody>
+								</table>
+							</div>
+						</details>
+					</article>
+
+					<article class="table-card">
+						<details class="collapsible">
+							<summary>
+								<span>Base militar</span>
+								<span class="summary-meta">Habilita produccion</span>
+							</summary>
+							<div class="table-wrap">
+								<table>
+									<thead>
+										<tr>
+											<th>Dato</th>
+											<th>Valor</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr><td><input value="Dinero"></td><td><input value="500"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Ciencia"></td><td><input value="350"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Tiempo de activacion"></td><td><input value="2 turnos"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Costo"></td><td><input value="2500"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+										<tr><td><input value="Tiempo de construccion"></td><td><input value="4 turnos"></td><td class="row-actions"><button class="mini-button danger js-remove-row" type="button">Quitar</button></td></tr>
+									</tbody>
+								</table>
+							</div>
+						</details>
+					</article>
+				</section>
+
+				<aside class="categories-stack" aria-label="Categorias de tienda">
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Infanteria de reclutamiento</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item">
+								<div class="category-row"><input value="Home Guard"><input value="40"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div>
+								<div class="category-row"><input value="Home Guard II"><input value="60"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div>
+							</div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Infanteria regular</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Rifle"><input value="120"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Rifle II"><input value="150"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Scout"><input value="150"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="SMG"><input value="180"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Medic"><input value="140"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Engineer"><input value="140"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Saper"><input value="170"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Radioman"><input value="170"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Vehiculos de apoyo</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Jeep"><input value="180"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Camion"><input value="260"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="BTR"><input value="420"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Tanques ligeros</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Tanque Ligero I"><input value="450"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Tanque Ligero II"><input value="600"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Tanque Ligero III"><input value="800"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Tanques medios</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Tanque Medio I"><input value="1100"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Tanque Medio II"><input value="1350"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Tanque Medio III"><input value="1700"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Sturmovik</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Sturmovik I"><input value="650"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Sturmovik II"><input value="720"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Sturmovik III"><input value="800"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Sturmovik IV"><input value="900"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Sturmovik V"><input value="1050"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Sturmovik VI"><input value="1200"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Elite</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Elite I"><input value="1400"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Elite II"><input value="1600"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Elite III"><input value="1800"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Elite IV"><input value="2000"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Elite V"><input value="2300"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Elite VI"><input value="2600"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+
+					<article class="category-card js-remove-card">
+						<div class="card-head">
+							<h2>Unidades especiales</h2>
+							<button class="mini-button danger js-remove-card-button" type="button">Quitar categoria</button>
+						</div>
+						<div class="category-list">
+							<div class="category-item"><div class="category-row"><input value="Especial I"><input value="2400"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Especial II"><input value="2800"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div><div class="category-row"><input value="Especial III"><input value="3400"><button class="mini-button danger js-remove-item" type="button">Quitar</button></div></div>
+						</div>
+					</article>
+				</aside>
+			</div>
+		</section>
+	</main>
+
+	<script src="./game-state.js"></script>
+	<script>
+		const passwordToggle = document.getElementById('use-password');
+		const passwordInput = document.getElementById('room-password');
+		const lobbyForm = document.getElementById('lobby-form');
+		const loadSaveSelect = document.getElementById('load-save');
+
+		passwordToggle.addEventListener('change', () => {
+			passwordInput.classList.toggle('hidden', !passwordToggle.checked);
+			if (!passwordToggle.checked) {
+				passwordInput.value = '';
+			}
+		});
+
+		document.addEventListener('click', (event) => {
+			const removeRowButton = event.target.closest('.js-remove-row');
+			if (removeRowButton) {
+				const row = removeRowButton.closest('tr');
+				if (row) {
+					row.remove();
+				}
+				return;
+			}
+
+			const removeItemButton = event.target.closest('.js-remove-item');
+			if (removeItemButton) {
+				const categoryRow = removeItemButton.closest('.category-row');
+				if (categoryRow) {
+					categoryRow.remove();
+				}
+				return;
+			}
+
+			const removeCardButton = event.target.closest('.js-remove-card-button');
+			if (removeCardButton) {
+				const card = removeCardButton.closest('.js-remove-card');
+				if (card) {
+					card.remove();
+				}
+			}
+		});
+
+		function collectShopItems() {
+			const rows = Array.from(document.querySelectorAll('.category-row'));
+			return rows.map((row, index) => {
+				const inputs = row.querySelectorAll('input');
+				return {
+					id: 'shop-' + String(index + 1),
+					title: inputs[0] ? inputs[0].value.trim() || 'Articulo' : 'Articulo',
+					price: inputs[1] ? inputs[1].value.trim() || '0' : '0'
+				};
+			});
+		}
+
+		async function loadSaves() {
+			try {
+				const saves = await window.RolGameState.listSaves();
+				saves.forEach((save) => {
+					const option = document.createElement('option');
+					option.value = save.id;
+					option.textContent = save.name + ' (' + save.roomName + ')';
+					loadSaveSelect.appendChild(option);
+				});
+			} catch (error) {
+				return;
+			}
+		}
+
+		lobbyForm.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const roomName = document.getElementById('room-name').value.trim() || 'Sala';
+			const roomPassword = passwordToggle.checked ? passwordInput.value.trim() : '';
+			const roomNote = document.getElementById('lobby-note').value.trim();
+			const room = await window.RolGameState.createRoom({
+				name: roomName,
+				password: roomPassword,
+				note: roomNote,
+				loadSaveId: loadSaveSelect.value || null,
+				shopItems: collectShopItems()
+			});
+			window.RolGameState.setCurrentRoomId(room.id);
+			window.location.href = './owner.html';
+		});
+
+		loadSaves();
+	</script>
+</body>
+</html>
